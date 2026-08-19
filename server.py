@@ -26,7 +26,7 @@ from embed import embed
 mcp = MCPServer(name="kiro-recall")
 
 
-@mcp.tool()
+@mcp.tool(name="Remember")
 async def remember(
     text: str,
     memory_type: str = "episodic",
@@ -70,7 +70,7 @@ async def remember(
         conn.close()
 
 
-@mcp.tool()
+@mcp.tool(name="Recall")
 async def recall(query: str, memory_type: str = "all", limit: int = 10) -> str:
     """Search memory by semantic similarity.
 
@@ -118,7 +118,7 @@ async def recall(query: str, memory_type: str = "all", limit: int = 10) -> str:
         conn.close()
 
 
-@mcp.tool()
+@mcp.tool(name="Learn")
 async def learn(rule: str, category: str = "preference") -> str:
     """Store a correction or rule that should always be followed.
 
@@ -137,7 +137,7 @@ async def learn(rule: str, category: str = "preference") -> str:
         conn.close()
 
 
-@mcp.tool()
+@mcp.tool(name="Forget")
 async def forget(memory_type: str, identifier: str) -> str:
     """Remove a memory.
 
@@ -169,7 +169,7 @@ async def forget(memory_type: str, identifier: str) -> str:
         conn.close()
 
 
-@mcp.tool()
+@mcp.tool(name="MemoryStats")
 async def memory_stats() -> str:
     """Show memory statistics — how many items in each store."""
     conn = get_db()
