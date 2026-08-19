@@ -69,9 +69,9 @@ ollama pull qwen3-embedding:0.6b
 uv venv .venv
 uv pip install "mcp[cli]>=1.0.0" "httpx>=0.27.0"
 
-# 3. Copy to ~/.kiro/memory
-mkdir -p ~/.kiro/memory
-cp server.py db.py embed.py obsidian_sync.py ~/.kiro/memory/
+# 3. Copy to ~/.kiro/recall
+mkdir -p ~/.kiro/recall
+cp server.py db.py embed.py obsidian_sync.py ~/.kiro/recall/
 
 # 4. Add to MCP config (see install.sh for the JSON patch)
 ```
@@ -106,7 +106,7 @@ cp server.py db.py embed.py obsidian_sync.py ~/.kiro/memory/
 Run manually or via cron:
 
 ```bash
-~/.kiro/memory/.venv/bin/python ~/.kiro/memory/obsidian_sync.py
+~/.kiro/recall/.venv/bin/python ~/.kiro/recall/obsidian_sync.py
 ```
 
 Outputs:
@@ -116,7 +116,7 @@ Outputs:
 
 ## Configuration
 
-Set the Obsidian vault path via environment variable (prompted during install, saved to `~/.kiro/memory/.env`):
+Set the Obsidian vault path via environment variable (prompted during install, saved to `~/.kiro/recall/.env`):
 
 ```bash
 export KIRO_MEMORY_VAULT="$HOME/Documents/Obsidian/My Vault"

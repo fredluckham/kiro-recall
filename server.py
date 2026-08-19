@@ -6,7 +6,17 @@ import sys
 from pathlib import Path
 
 # Ensure local modules are importable
-sys.path.insert(0, str(Path(__file__).parent))
+_HERE = Path(__file__).parent
+sys.path.insert(0, str(_HERE))
+
+# Load .env file from the same directory as this script (if present)
+_ENV_FILE = _HERE / ".env"
+if _ENV_FILE.exists():
+    for _line in _ENV_FILE.read_text().splitlines():
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
 
 from mcp.server import MCPServer
 
@@ -28,11 +38,17 @@ from embed import embed
 
 mcp = MCPServer(name="kiro-recall")
 
-# Auto-sync to Obsidian after writes if KIRO_MEMORY_AUTOSYNC=1
-_AUTOSYNC = os.environ.get("KIRO_MEMORY_AUTOSYNC", "").lower() in ("1", "true", "yes")
-
 
 def _maybe_sync():
+    """Trigger Obsidian sync if auto-sync is enabled. Fails silently."""
+    # Read env var dynamically so changes to .env take effect after restart
+    if os.environ.get("KIRO_MEMORY_AUTOSYNC", "").lower() not in ("1", "true", "yes"):
+        return
+    try:
+        from obsidian_sync import sync_all
+        sync_all()
+    except Exception:
+        pass  # Never let a sync failure break a write operation
     """Trigger Obsidian sync if auto-sync is enabled. Fails silently."""
     if not _AUTOSYNC:
         return

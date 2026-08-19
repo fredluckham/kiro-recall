@@ -8,7 +8,7 @@ import time
 from pathlib import Path
 from typing import Optional
 
-DB_PATH = Path.home() / ".kiro" / "memory" / "memory.db"
+DB_PATH = Path.home() / ".kiro" / "recall" / "memory.db"
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS semantic (
@@ -240,6 +240,13 @@ def update_episodic_accessed(conn: sqlite3.Connection, row_ids: list[int]) -> No
         [now, *row_ids],
     )
     conn.commit()
+
+
+def delete_semantic(conn: sqlite3.Connection, key: str) -> bool:
+    """Delete a semantic memory entry by key."""
+    cur = conn.execute("DELETE FROM semantic WHERE key = ?", (key,))
+    conn.commit()
+    return cur.rowcount > 0
 
 
 # --- Lessons ---

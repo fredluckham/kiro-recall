@@ -52,7 +52,7 @@ echo "  ${DIM}──────────────────────
 # ══════════════════════════════════════════════════════════════════════
 # Step 1: Ollama
 # ══════════════════════════════════════════════════════════════════════
-step "1/5" "Ollama"
+step "1/6" "Ollama"
 
 if [ "$SKIP_OLLAMA" -eq 1 ]; then
     info "Skipping Ollama install (--no-ollama)"
@@ -108,7 +108,7 @@ fi
 # ══════════════════════════════════════════════════════════════════════
 # Step 2: Python environment
 # ══════════════════════════════════════════════════════════════════════
-step "2/5" "Python environment"
+step "2/6" "Python environment"
 
 mkdir -p "$INSTALL_DIR"
 
@@ -140,7 +140,7 @@ ok "Python environment verified"
 # ══════════════════════════════════════════════════════════════════════
 # Step 3: Configuration
 # ══════════════════════════════════════════════════════════════════════
-step "3/5" "Configuration"
+step "3/6" "Configuration"
 
 PYTHON_PATH="$INSTALL_DIR/.venv/bin/python"
 SERVER_PATH="$INSTALL_DIR/server.py"
@@ -151,11 +151,20 @@ printf "  ${DIM}→${RESET} Obsidian vault path [${DIM}%s${RESET}]: " "$DEFAULT_
 read -r VAULT_PATH < /dev/tty
 VAULT_PATH="${VAULT_PATH:-$DEFAULT_VAULT}"
 
+# Prompt for autosync
+printf "  ${DIM}→${RESET} Enable auto Obsidian sync after every Remember/Learn call? [y/N]: "
+read -r AUTOSYNC_ANSWER < /dev/tty
+AUTOSYNC_VAL="0"
+case "$AUTOSYNC_ANSWER" in
+    [Yy]*) AUTOSYNC_VAL="1" ;;
+esac
+
 # Write env file for the server and sync script
 cat > "$INSTALL_DIR/.env" <<EOF
 KIRO_MEMORY_VAULT=$VAULT_PATH
+KIRO_MEMORY_AUTOSYNC=$AUTOSYNC_VAL
 EOF
-ok "Vault path saved to $INSTALL_DIR/.env"
+ok "Configuration saved to $INSTALL_DIR/.env"
 
 mkdir -p "$(dirname "$MCP_CONFIG")"
 
@@ -163,19 +172,8 @@ if [ -f "$MCP_CONFIG" ]; then
     if grep -q '"kiro-recall"' "$MCP_CONFIG"; then
         ok "kiro-recall already in MCP config"
     else
-        # Insert after opening "mcpServers": {
-        ENTRY=$(cat <<EOF
-    "kiro-recall": {
-      "command": "$PYTHON_PATH",
-      "args": ["$SERVER_PATH"],
-      "disabled": false,
-      "autoApprove": ["remember", "recall", "learn", "forget", "memory_stats"]
-    },
-EOF
-)
-        # Use python for reliable JSON manipulation
         "$PYTHON_PATH" -c "
-import json, sys
+import json
 with open('$MCP_CONFIG', 'r') as f:
     config = json.load(f)
 config.setdefault('mcpServers', {})
@@ -183,7 +181,7 @@ config['mcpServers']['kiro-recall'] = {
     'command': '$PYTHON_PATH',
     'args': ['$SERVER_PATH'],
     'disabled': False,
-    'autoApprove': ['Remember', 'Recall', 'Learn', 'Forget', 'MemoryStats'],
+    'autoApprove': ['Remember', 'Recall', 'Learn', 'Forget', 'MemoryStats', 'PruneMemory'],
     'env': {'KIRO_MEMORY_VAULT': '$VAULT_PATH'}
 }
 with open('$MCP_CONFIG', 'w') as f:
@@ -199,7 +197,7 @@ else
       "command": "$PYTHON_PATH",
       "args": ["$SERVER_PATH"],
       "disabled": false,
-      "autoApprove": ["Remember", "Recall", "Learn", "Forget", "MemoryStats"],
+      "autoApprove": ["Remember", "Recall", "Learn", "Forget", "MemoryStats", "PruneMemory"],
       "env": {"KIRO_MEMORY_VAULT": "$VAULT_PATH"}
     }
   }
@@ -211,7 +209,7 @@ fi
 # ══════════════════════════════════════════════════════════════════════
 # Step 4: Steering file
 # ══════════════════════════════════════════════════════════════════════
-step "4/5" "Steering file"
+step "4/6" "Steering file"
 
 mkdir -p "$STEERING_DIR"
 STEERING_FILE="$STEERING_DIR/obsidian-memory.md"
@@ -271,7 +269,55 @@ fi
 # ══════════════════════════════════════════════════════════════════════
 # Step 5: Verify
 # ══════════════════════════════════════════════════════════════════════
-step "5/5" "Verify"
+# Step 5: Seed from Obsidian (optional)
+# ══════════════════════════════════════════════════════════════════════
+step "5/6" "Seed memory from Obsidian"
+
+if [ "$SKIP_SEED" -eq 1 ]; then
+    info "Skipping seed (--no-seed)"
+elif [ ! -d "$VAULT_PATH" ]; then
+    info "Vault not found at $VAULT_PATH — skipping seed"
+else
+    printf "  ${DIM}→${RESET} Seed memory from your Obsidian vault? [y/N]: "
+    read -r SEED_ANSWER < /dev/tty
+    case "$SEED_ANSWER" in
+        [Yy]*)
+            info "Looking for markdown files to seed from..."
+            SEEDED=0
+            for f in "$VAULT_PATH/About Me.md" "$VAULT_PATH/Profile.md" "$VAULT_PATH/Projects.md" "$VAULT_PATH/Kiro Notes.md"; do
+                if [ -f "$f" ]; then
+                    "$PYTHON_PATH" -c "
+import sys, os
+sys.path.insert(0, '$INSTALL_DIR')
+os.environ['KIRO_MEMORY_VAULT'] = '$VAULT_PATH'
+import asyncio
+from server import remember
+result = asyncio.run(remember(
+    text=open('$f').read()[:2000],
+    memory_type='episodic',
+    importance=0.8,
+    tags='seed,obsidian'
+))
+print(result)
+" && info "Seeded: $(basename "$f")" && SEEDED=$((SEEDED + 1))
+                fi
+            done
+            if [ "$SEEDED" -eq 0 ]; then
+                info "No standard seed files found (About Me.md, Profile.md, Projects.md, Kiro Notes.md)"
+            else
+                ok "Seeded $SEEDED file(s) from vault"
+            fi
+            ;;
+        *)
+            info "Skipping seed"
+            ;;
+    esac
+fi
+
+# ══════════════════════════════════════════════════════════════════════
+# Step 6: Verify
+# ══════════════════════════════════════════════════════════════════════
+step "6/6" "Verify"
 
 # Test embedding endpoint
 if curl -s http://localhost:11434/api/embed -d "{\"model\":\"$EMBEDDING_MODEL\",\"input\":\"test\"}" | grep -q "embeddings"; then
@@ -287,8 +333,8 @@ sys.path.insert(0, '$INSTALL_DIR')
 from server import mcp
 import asyncio
 tools = asyncio.run(mcp.list_tools())
-assert len(tools) == 5, f'Expected 5 tools, got {len(tools)}'
-" && ok "MCP server loads with 5 tools" || fail "Server failed to load"
+assert len(tools) == 6, f'Expected 6 tools, got {len(tools)}'
+" && ok "MCP server loads with 6 tools" || fail "Server failed to load"
 
 # ── Done ──
 echo ""
