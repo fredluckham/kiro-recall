@@ -183,7 +183,7 @@ config['mcpServers']['kiro-recall'] = {
     'command': '$PYTHON_PATH',
     'args': ['$SERVER_PATH'],
     'disabled': False,
-    'autoApprove': ['remember', 'recall', 'learn', 'forget', 'memory_stats'],
+    'autoApprove': ['Remember', 'Recall', 'Learn', 'Forget', 'MemoryStats'],
     'env': {'KIRO_MEMORY_VAULT': '$VAULT_PATH'}
 }
 with open('$MCP_CONFIG', 'w') as f:
@@ -199,7 +199,7 @@ else
       "command": "$PYTHON_PATH",
       "args": ["$SERVER_PATH"],
       "disabled": false,
-      "autoApprove": ["remember", "recall", "learn", "forget", "memory_stats"],
+      "autoApprove": ["Remember", "Recall", "Learn", "Forget", "MemoryStats"],
       "env": {"KIRO_MEMORY_VAULT": "$VAULT_PATH"}
     }
   }
@@ -226,24 +226,24 @@ You have persistent local memory via the `kiro-recall` MCP server. Use it proact
 
 ## On Session Start
 
-Call `recall` with a broad query about the user and current context to load relevant memory:
-- `recall("user preferences and current projects")`
-- If the conversation has a clear topic, also `recall("topic keywords here")`
+Call `Recall` with a broad query about the user and current context to load relevant memory:
+- `Recall("user preferences and current projects")`
+- If the conversation has a clear topic, also `Recall("topic keywords here")`
 
 ## During Conversations
 
-### When to `remember`
-- User states a preference or correction → `remember` as semantic (`pref.*` key)
-- User mentions a project, tool, or workflow → `remember` as semantic (`project.*` or `user.*`)
-- A significant decision, insight, or outcome occurs → `remember` as episodic with appropriate importance
-- User explicitly says "remember this" → `remember` with importance=0.9
+### When to `Remember`
+- User states a preference or correction → `Remember` as semantic (`pref.*` key)
+- User mentions a project, tool, or workflow → `Remember` as semantic (`project.*` or `user.*`)
+- A significant decision, insight, or outcome occurs → `Remember` as episodic with appropriate importance
+- User explicitly says "remember this" → `Remember` with importance=0.9
 
-### When to `learn`
-- User corrects your behaviour → `learn` the correction as a rule
-- User says "always do X" or "never do Y" → `learn` it
-- A pattern emerges where you keep getting something wrong → `learn` the fix
+### When to `Learn`
+- User corrects your behaviour → `Learn` the correction as a rule
+- User says "always do X" or "never do Y" → `Learn` it
+- A pattern emerges where you keep getting something wrong → `Learn` the fix
 
-### When to `recall`
+### When to `Recall`
 - Before making assumptions about the user's setup, preferences, or projects
 - When the user references something from a previous session
 - When you need context about a topic you've discussed before
@@ -298,7 +298,7 @@ echo "  ${DIM}──────────────────────
 echo ""
 echo "  ${BOLD}Next steps:${RESET}"
 echo "    1. Restart your kiro-cli session to pick up the new MCP server"
-echo "    2. The AI will now have access to: remember, recall, learn, forget"
+echo "    2. The AI will now have access to: Remember, Recall, Learn, Forget"
 echo ""
 echo "  ${BOLD}Obsidian sync:${RESET}"
 echo "    $PYTHON_PATH $INSTALL_DIR/obsidian_sync.py"
