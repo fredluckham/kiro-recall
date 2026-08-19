@@ -8,7 +8,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from mcp.server import MCPServer
-from mcp.server.stdio import stdio_server
 
 from db import (
     get_db,
@@ -186,11 +185,5 @@ async def memory_stats() -> str:
         conn.close()
 
 
-async def main():
-    async with stdio_server() as (read_stream, write_stream):
-        await mcp.run(read_stream, write_stream)
-
-
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+    mcp.run()
