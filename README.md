@@ -42,7 +42,7 @@ Inspired by [Kiro Crew](https://github.com/kirodotdev/KiroCrew)'s memory archite
 ## Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/kiro-recall.git
+git clone https://github.com/fredluckham/kiro-recall.git
 cd kiro-recall
 bash install.sh
 ```
@@ -57,7 +57,7 @@ The install script will:
 
 ## Manual setup
 
-If you prefer not to use the install script:
+If you prefer not to use the install script:#
 
 ```bash
 # 1. Install Ollama and the embedding model
