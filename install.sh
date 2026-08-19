@@ -138,12 +138,24 @@ fi
 ok "Python environment verified"
 
 # ══════════════════════════════════════════════════════════════════════
-# Step 3: MCP config
+# Step 3: Configuration
 # ══════════════════════════════════════════════════════════════════════
-step "3/5" "Kiro CLI MCP config"
+step "3/5" "Configuration"
 
 PYTHON_PATH="$INSTALL_DIR/.venv/bin/python"
 SERVER_PATH="$INSTALL_DIR/server.py"
+
+# Prompt for vault path (needed for MCP config below)
+DEFAULT_VAULT="$HOME/Documents/Obsidian/Kiro Knowledge Base"
+printf "  ${DIM}→${RESET} Obsidian vault path [${DIM}%s${RESET}]: " "$DEFAULT_VAULT"
+read -r VAULT_PATH < /dev/tty
+VAULT_PATH="${VAULT_PATH:-$DEFAULT_VAULT}"
+
+# Write env file for the server and sync script
+cat > "$INSTALL_DIR/.env" <<EOF
+KIRO_MEMORY_VAULT=$VAULT_PATH
+EOF
+ok "Vault path saved to $INSTALL_DIR/.env"
 
 mkdir -p "$(dirname "$MCP_CONFIG")"
 
@@ -199,19 +211,7 @@ fi
 # ══════════════════════════════════════════════════════════════════════
 # Step 4: Steering file
 # ══════════════════════════════════════════════════════════════════════
-step "4/5" "Steering file & configuration"
-
-# Prompt for vault path
-DEFAULT_VAULT="$HOME/Documents/Obsidian/Kiro Knowledge Base"
-printf "  ${DIM}→${RESET} Obsidian vault path [${DIM}%s${RESET}]: " "$DEFAULT_VAULT"
-read -r VAULT_PATH < /dev/tty
-VAULT_PATH="${VAULT_PATH:-$DEFAULT_VAULT}"
-
-# Write env file for the server and sync script
-cat > "$INSTALL_DIR/.env" <<EOF
-KIRO_MEMORY_VAULT=$VAULT_PATH
-EOF
-ok "Vault path saved to $INSTALL_DIR/.env"
+step "4/5" "Steering file"
 
 mkdir -p "$STEERING_DIR"
 STEERING_FILE="$STEERING_DIR/obsidian-memory.md"
