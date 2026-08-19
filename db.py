@@ -111,9 +111,17 @@ def write_semantic(
 
 
 def search_semantic(
-    conn: sqlite3.Connection, query_vec: Optional[list[float]] = None, limit: int = 20
+    conn: sqlite3.Connection,
+    query_vec: Optional[list[float]] = None,
+    limit: int = 20,
+    score_threshold: float = 0.0,
 ) -> list[dict]:
-    """Search semantic memory. Vector-ranked if query_vec provided, else recency."""
+    """Search semantic memory. Vector-ranked if query_vec provided, else recency.
+
+    Args:
+        score_threshold: Minimum cosine similarity to include a result. Only applied
+                         when query_vec is provided. Default 0.0 (no filtering).
+    """
     rows = conn.execute(
         "SELECT key, value, source, confidence, embedding, updated_at FROM semantic"
     ).fetchall()
@@ -135,6 +143,8 @@ def search_semantic(
 
     if query_vec:
         results.sort(key=lambda x: x["score"], reverse=True)
+        if score_threshold > 0.0:
+            results = [r for r in results if r["score"] >= score_threshold]
     else:
         results.sort(key=lambda x: x["updated_at"], reverse=True)
 
@@ -169,8 +179,15 @@ def search_episodic(
     conn: sqlite3.Connection,
     query_vec: Optional[list[float]] = None,
     limit: int = 8,
+    score_threshold: float = 0.0,
 ) -> list[dict]:
-    """Search episodic memory with decay scoring."""
+    """Search episodic memory with decay scoring.
+
+    Decay is measured from accessed_at, so recalling a memory resets its decay clock.
+
+    Args:
+        score_threshold: Minimum combined decay score to include a result. Default 0.0.
+    """
     rows = conn.execute(
         "SELECT id, text, tags, importance, embedding, created_at, accessed_at FROM episodic WHERE is_deleted = 0"
     ).fetchall()
@@ -178,6 +195,8 @@ def search_episodic(
     now = time.time()
     results = []
     for row in rows:
+        # Decay from last access time — recalling a memory resets its clock
+        days_since_access = (now - row["accessed_at"]) / 86400
         days_old = (now - row["created_at"]) / 86400
         importance = row["importance"]
 
@@ -186,8 +205,11 @@ def search_episodic(
         else:
             sim = 0.3  # Base score for keyword fallback
 
-        # Decay formula from Kiro Crew: sim * (0.7 + 0.3*importance) * exp(-0.03*days)
-        score = sim * (0.7 + 0.3 * importance) * math.exp(-0.03 * days_old)
+        # Decay formula: sim * (0.7 + 0.3*importance) * exp(-0.03 * days_since_access)
+        score = sim * (0.7 + 0.3 * importance) * math.exp(-0.03 * days_since_access)
+
+        if score_threshold > 0.0 and score < score_threshold:
+            continue
 
         results.append(
             {
@@ -203,6 +225,21 @@ def search_episodic(
 
     results.sort(key=lambda x: x["score"], reverse=True)
     return results[:limit]
+
+
+def update_episodic_accessed(conn: sqlite3.Connection, row_ids: list[int]) -> None:
+    """Update accessed_at for a list of episodic row IDs to now.
+
+    Called after a successful Recall to reset the decay clock on retrieved memories.
+    """
+    if not row_ids:
+        return
+    now = time.time()
+    conn.execute(
+        f"UPDATE episodic SET accessed_at = ? WHERE id IN ({','.join('?' * len(row_ids))})",
+        [now, *row_ids],
+    )
+    conn.commit()
 
 
 # --- Lessons ---
@@ -233,13 +270,62 @@ def write_lesson(conn: sqlite3.Connection, rule: str, category: str = "preferenc
     return cur.lastrowid
 
 
-def get_lessons(conn: sqlite3.Connection) -> list[dict]:
-    """Get all active lessons."""
-    rows = conn.execute("SELECT id, rule, category, created_at FROM lessons").fetchall()
+def get_lessons(conn: sqlite3.Connection, category: Optional[str] = None) -> list[dict]:
+    """Get all active lessons, optionally filtered by category."""
+    if category:
+        rows = conn.execute(
+            "SELECT id, rule, category, created_at FROM lessons WHERE category = ?", (category,)
+        ).fetchall()
+    else:
+        rows = conn.execute("SELECT id, rule, category, created_at FROM lessons").fetchall()
     return [{"id": row["id"], "rule": row["rule"], "category": row["category"]} for row in rows]
 
 
-def delete_semantic(conn: sqlite3.Connection, key: str) -> bool:
+def prune_episodic(conn: sqlite3.Connection, score_floor: float = 0.05) -> dict:
+    """Hard-delete decayed and soft-deleted episodic rows.
+
+    Removes:
+    - All soft-deleted rows (is_deleted = 1).
+    - Active rows whose maximum possible decay score has fallen below score_floor.
+      Max possible score uses importance=1.0 and base sim=0.3 (no query context):
+        0.3 * 1.0 * exp(-0.03 * days_old)
+
+    Args:
+        score_floor: Rows with max possible score below this are pruned. Default 0.05
+                     (~115 days at importance=1.0).
+
+    Returns:
+        Dict with counts of soft_deleted and decayed rows removed.
+    """
+    now = time.time()
+
+    # Hard-delete soft-deleted rows
+    cur = conn.execute("DELETE FROM episodic WHERE is_deleted = 1")
+    soft_deleted_count = cur.rowcount
+
+    # Find active rows whose max possible decay score is below the floor
+    rows = conn.execute(
+        "SELECT id, importance, created_at, accessed_at FROM episodic WHERE is_deleted = 0"
+    ).fetchall()
+
+    decayed_ids = []
+    for row in rows:
+        days_since_access = (now - row["accessed_at"]) / 86400
+        max_score = 0.3 * 1.0 * math.exp(-0.03 * days_since_access)
+        if max_score < score_floor:
+            decayed_ids.append(row["id"])
+
+    if decayed_ids:
+        conn.execute(
+            f"DELETE FROM episodic WHERE id IN ({','.join('?' * len(decayed_ids))})",
+            decayed_ids,
+        )
+
+    conn.commit()
+    return {"soft_deleted": soft_deleted_count, "decayed": len(decayed_ids)}
+
+
+
     """Delete a semantic entry."""
     cur = conn.execute("DELETE FROM semantic WHERE key = ?", (key,))
     conn.commit()
