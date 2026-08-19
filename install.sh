@@ -171,7 +171,8 @@ config['mcpServers']['kiro-memory'] = {
     'command': '$PYTHON_PATH',
     'args': ['$SERVER_PATH'],
     'disabled': False,
-    'autoApprove': ['remember', 'recall', 'learn', 'forget', 'memory_stats']
+    'autoApprove': ['remember', 'recall', 'learn', 'forget', 'memory_stats'],
+    'env': {'KIRO_MEMORY_VAULT': '$VAULT_PATH'}
 }
 with open('$MCP_CONFIG', 'w') as f:
     json.dump(config, f, indent=2)
@@ -186,7 +187,8 @@ else
       "command": "$PYTHON_PATH",
       "args": ["$SERVER_PATH"],
       "disabled": false,
-      "autoApprove": ["remember", "recall", "learn", "forget", "memory_stats"]
+      "autoApprove": ["remember", "recall", "learn", "forget", "memory_stats"],
+      "env": {"KIRO_MEMORY_VAULT": "$VAULT_PATH"}
     }
   }
 }
@@ -197,7 +199,19 @@ fi
 # ══════════════════════════════════════════════════════════════════════
 # Step 4: Steering file
 # ══════════════════════════════════════════════════════════════════════
-step "4/5" "Steering file"
+step "4/5" "Steering file & configuration"
+
+# Prompt for vault path
+DEFAULT_VAULT="$HOME/Documents/Obsidian/Kiro Knowledge Base"
+printf "  ${DIM}→${RESET} Obsidian vault path [${DIM}%s${RESET}]: " "$DEFAULT_VAULT"
+read -r VAULT_PATH < /dev/tty
+VAULT_PATH="${VAULT_PATH:-$DEFAULT_VAULT}"
+
+# Write env file for the server and sync script
+cat > "$INSTALL_DIR/.env" <<EOF
+KIRO_MEMORY_VAULT=$VAULT_PATH
+EOF
+ok "Vault path saved to $INSTALL_DIR/.env"
 
 mkdir -p "$STEERING_DIR"
 STEERING_FILE="$STEERING_DIR/obsidian-memory.md"
@@ -241,7 +255,7 @@ Call `recall` with a broad query about the user and current context to load rele
 
 ## Obsidian Vault
 
-The user's knowledge base lives at `~/Documents/Obsidian/Kiro Knowledge Base/`.
+The user's knowledge base path is configured via `KIRO_MEMORY_VAULT` env var.
 - Always use `[[wikilink]]` style when writing to the vault
 - Memory syncs to `Memory/Semantic.md`, `Memory/Lessons.md`, and session logs
 - The vault also has `Topics/`, `Profile.md`, and `Sessions/` for reference

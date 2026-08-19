@@ -1,13 +1,14 @@
 """Obsidian sync — renders memory state to markdown files with wikilinks."""
 
 import json
+import os
 import time
 from datetime import datetime
 from pathlib import Path
 
 from db import get_db, get_lessons
 
-VAULT_ROOT = Path.home() / "Documents" / "Obsidian" / "Kiro Knowledge Base"
+VAULT_ROOT = Path(os.environ.get("KIRO_MEMORY_VAULT", Path.home() / "Documents" / "Obsidian" / "Kiro Knowledge Base"))
 MEMORY_DIR = VAULT_ROOT / "Memory"
 
 

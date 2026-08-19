@@ -115,11 +115,13 @@ Outputs:
 
 ## Configuration
 
-The Obsidian vault path is set in `obsidian_sync.py`:
+Set the Obsidian vault path via environment variable (prompted during install, saved to `~/.kiro/memory/.env`):
 
-```python
-VAULT_ROOT = Path.home() / "Documents" / "Obsidian" / "Kiro Knowledge Base"
+```bash
+export KIRO_MEMORY_VAULT="$HOME/Documents/Obsidian/My Vault"
 ```
+
+The default is `~/Documents/Obsidian/Kiro Knowledge Base`.
 
 The Ollama endpoint is set in `embed.py`:
 
