@@ -84,7 +84,8 @@ cp server.py db.py embed.py obsidian_sync.py ~/.kiro/memory/
 | `Recall` | Semantic search across all memory |
 | `Learn` | Store a high-priority correction/rule |
 | `Forget` | Remove a memory by key or ID |
-| `MemoryStats` | Show counts per memory tier |
+| `MemoryStats` | Show counts, age, and decay health per memory tier |
+| `PruneMemory` | Hard-delete soft-deleted and fully decayed episodic rows |
 
 ## Memory tiers
 
@@ -122,6 +123,14 @@ export KIRO_MEMORY_VAULT="$HOME/Documents/Obsidian/My Vault"
 ```
 
 The default is `~/Documents/Obsidian/Kiro Knowledge Base`.
+
+Enable automatic Obsidian sync after every `Remember` or `Learn` call:
+
+```bash
+export KIRO_MEMORY_AUTOSYNC=1
+```
+
+When disabled (default), sync runs manually or via cron. Auto-sync adds a small write overhead per call but keeps the vault always current.
 
 The Ollama endpoint is set in `embed.py`:
 
