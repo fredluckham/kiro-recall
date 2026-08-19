@@ -17,7 +17,7 @@ Inspired by [Kiro Crew](https://github.com/kirodotdev/KiroCrew)'s memory archite
 ```
 ┌──────────────────────────────────────────┐
 │  Kiro CLI / any MCP client               │
-│  Tools: remember, recall, learn, forget  │
+│  Tools: Remember, Recall, Learn, Forget  │
 └──────────────┬───────────────────────────┘
                │ stdio (MCP protocol)
        ┌───────▼───────┐          ┌─────────────────┐
@@ -80,11 +80,11 @@ cp server.py db.py embed.py obsidian_sync.py ~/.kiro/memory/
 
 | Tool | Description |
 |------|-------------|
-| `remember` | Store a fact, episode, or lesson |
-| `recall` | Semantic search across all memory |
-| `learn` | Store a high-priority correction/rule |
-| `forget` | Remove a memory by key or ID |
-| `memory_stats` | Show counts per memory tier |
+| `Remember` | Store a fact, episode, or lesson |
+| `Recall` | Semantic search across all memory |
+| `Learn` | Store a high-priority correction/rule |
+| `Forget` | Remove a memory by key or ID |
+| `MemoryStats` | Show counts per memory tier |
 
 ## Memory tiers
 
