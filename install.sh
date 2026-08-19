@@ -38,7 +38,7 @@ step() { echo ""; echo "  ${CYAN}${BOLD}[$1]${RESET} ${BOLD}$2${RESET}"; }
 
 # ── Constants ──
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-INSTALL_DIR="$HOME/.kiro/memory"
+INSTALL_DIR="$HOME/.kiro/recall"
 MCP_CONFIG="$HOME/.kiro/settings/mcp.json"
 STEERING_DIR="$HOME/.kiro/steering"
 EMBEDDING_MODEL="qwen3-embedding:0.6b"
