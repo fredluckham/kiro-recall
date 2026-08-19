@@ -23,7 +23,7 @@ from db import (
 )
 from embed import embed
 
-mcp = MCPServer(name="kiro-memory")
+mcp = MCPServer(name="kiro-recall")
 
 
 @mcp.tool()

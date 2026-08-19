@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ──────────────────────────────────────────────────────────────────────
-# kiro-memory installer
+# kiro-recall installer
 # Sets up Ollama, the embedding model, Python deps, and kiro-cli config.
 #
 # Usage:
@@ -46,7 +46,7 @@ EMBEDDING_MODEL="qwen3-embedding:0.6b"
 has() { command -v "$1" >/dev/null 2>&1; }
 
 echo ""
-echo "${BOLD}  kiro-memory installer${RESET}"
+echo "${BOLD}  kiro-recall installer${RESET}"
 echo "  ${DIM}────────────────────────────────────${RESET}"
 
 # ══════════════════════════════════════════════════════════════════════
@@ -160,12 +160,12 @@ ok "Vault path saved to $INSTALL_DIR/.env"
 mkdir -p "$(dirname "$MCP_CONFIG")"
 
 if [ -f "$MCP_CONFIG" ]; then
-    if grep -q '"kiro-memory"' "$MCP_CONFIG"; then
-        ok "kiro-memory already in MCP config"
+    if grep -q '"kiro-recall"' "$MCP_CONFIG"; then
+        ok "kiro-recall already in MCP config"
     else
         # Insert after opening "mcpServers": {
         ENTRY=$(cat <<EOF
-    "kiro-memory": {
+    "kiro-recall": {
       "command": "$PYTHON_PATH",
       "args": ["$SERVER_PATH"],
       "disabled": false,
@@ -179,7 +179,7 @@ import json, sys
 with open('$MCP_CONFIG', 'r') as f:
     config = json.load(f)
 config.setdefault('mcpServers', {})
-config['mcpServers']['kiro-memory'] = {
+config['mcpServers']['kiro-recall'] = {
     'command': '$PYTHON_PATH',
     'args': ['$SERVER_PATH'],
     'disabled': False,
@@ -189,13 +189,13 @@ config['mcpServers']['kiro-memory'] = {
 with open('$MCP_CONFIG', 'w') as f:
     json.dump(config, f, indent=2)
 "
-        ok "Added kiro-memory to $MCP_CONFIG"
+        ok "Added kiro-recall to $MCP_CONFIG"
     fi
 else
     cat > "$MCP_CONFIG" <<EOF
 {
   "mcpServers": {
-    "kiro-memory": {
+    "kiro-recall": {
       "command": "$PYTHON_PATH",
       "args": ["$SERVER_PATH"],
       "disabled": false,
@@ -205,7 +205,7 @@ else
   }
 }
 EOF
-    ok "Created $MCP_CONFIG with kiro-memory"
+    ok "Created $MCP_CONFIG with kiro-recall"
 fi
 
 # ══════════════════════════════════════════════════════════════════════
@@ -222,7 +222,7 @@ else
     cat > "$STEERING_FILE" << 'STEERING'
 # Kiro Memory System
 
-You have persistent local memory via the `kiro-memory` MCP server. Use it proactively.
+You have persistent local memory via the `kiro-recall` MCP server. Use it proactively.
 
 ## On Session Start
 
@@ -292,7 +292,7 @@ assert len(tools) == 5, f'Expected 5 tools, got {len(tools)}'
 
 # ── Done ──
 echo ""
-echo "  ${GREEN}${BOLD}✓ kiro-memory installed successfully${RESET}"
+echo "  ${GREEN}${BOLD}✓ kiro-recall installed successfully${RESET}"
 echo ""
 echo "  ${DIM}────────────────────────────────────${RESET}"
 echo ""

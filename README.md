@@ -1,4 +1,4 @@
-# kiro-memory
+# kiro-recall
 
 A local MCP memory server for [Kiro CLI](https://kiro.dev) that gives your AI assistant persistent, semantic memory across sessions.
 
@@ -42,8 +42,8 @@ Inspired by [Kiro Crew](https://github.com/kirodotdev/KiroCrew)'s memory archite
 ## Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/kiro-memory.git
-cd kiro-memory
+git clone https://github.com/YOUR_USERNAME/kiro-recall.git
+cd kiro-recall
 bash install.sh
 ```
 

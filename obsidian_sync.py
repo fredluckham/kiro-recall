@@ -33,7 +33,7 @@ def _sync_semantic(conn):
     if not rows:
         return
 
-    lines = ["# Semantic Memory", "", "Auto-synced from kiro-memory. Do not edit directly.", ""]
+    lines = ["# Semantic Memory", "", "Auto-synced from kiro-recall. Do not edit directly.", ""]
 
     current_prefix = ""
     for row in rows:
